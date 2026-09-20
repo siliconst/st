@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silicon Technology - Warranty System</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 100%; max-width: 750px; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 5px; color: #555; font-size: 14px; }
+        .form-group input, .form-group select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #007bff; box-shadow: 0 0 5px rgba(0,123,255,0.2); }
+        .row { display: flex; gap: 15px; }
+        .row .form-group { flex: 1; }
+        
+        .product-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+        .product-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end; }
+        .product-row .form-group { margin-bottom: 0; }
+        .btn-add { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; width: auto; }
+        .btn-add:hover { background: #0056b3; }
+        .btn-remove { background: #dc3545; color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px; }
+        .btn-remove:hover { background: #c82333; }
+        
+        .btn-group { display: flex; gap: 15px; margin-top: 25px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; flex: 1; transition: all 0.2s; }
+        .btn-save { background: #007bff; color: white; }
+        .btn-save:hover { background: #0056b3; }
+        .btn-print { background: #28a745; color: white; }
+        .btn-print:hover { background: #218838; }
+        .btn-reset { background: #6c757d; color: white; }
+        .btn-reset:hover { background: #5a6268; }
+
+        .status-select { padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; border: 1px solid #ccc; }
+        .status-select.incomplete { background-color: #ffcccc; color: #cc0000; border-color: #cc0000; }
+        .status-select.complete { background-color: #ccffcc; color: #008000; border-color: #008000; }
+
+        /* ==========================================
+           প্রিন্ট স্লিপ ডিজাইন (A4)
+           ========================================== */
+        .slip-preview {
+            margin-top: 40px;
+            border: 2px solid #333;
+            padding: 30px;
+            background: #fff;
+            display: none;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        .slip-header {
+            text-align: center;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #1a1a1a;
+        }
+
+        .slip-header h1 {
+            margin: 0 0 5px 0;
+            font-size: 32px;
+            color: #1a1a1a;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+        }
+
+        .slip-header .subtitle {
+            font-size: 12px;
+            color: #666;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .slip-header .warranty-slip-tag {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 6px 30px;
+            border: 1.5px solid #1a1a1a;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .slip-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            gap: 30px;
+        }
+
+        .slip-info .info-block {
+            flex: 1;
+            line-height: 2;
+        }
+
+        .slip-info .info-block strong {
+            display: inline-block;
+            min-width: 90px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .slip-info .info-block span {
+            color: #000;
+            font-weight: 500;
+        }
+
+        .slip-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .slip-table thead {
+            background: #e8e8e8;
+            color: #1a1a1a;
+        }
+
+        .slip-table th {
+            padding: 12px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            border: 1px solid #999;
+            color: #1a1a1a;
+        }
+
+        .slip-table td {
+            padding: 12px 10px;
+            font-size: 13px;
+            text-align: center;
+            border: 1px solid #999;
+            color: #000;
+        }
+
+        .slip-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .print-status-badge {
+            display: block;
+            text-align: center;
+            margin: 25px auto;
+            padding: 10px 40px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 15px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            width: fit-content;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .print-status-badge.incomplete {
+            background: #ffebeb;
+            color: #cc0000;
+            border: 2px solid #cc0000;
+        }
+
+        .print-status-badge.complete {
+            background: #ebffeb;
+            color: #008000;
+            border: 2px solid #008000;
+        }
+
+        .signature-area {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .signature-box {
+            width: 230px;
+            border-top: 1.5px solid #1a1a1a;
+            text-align: center;
+            padding-top: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 1px;
+        }
+
+        .slip-footer {
+            margin-top: 50px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .toast {
+            position: fixed; top: 20px; right: 20px;
+            background: #28a745; color: white;
+            padding: 15px 25px; border-radius: 6px;
+            font-weight: bold; font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: none; z-index: 9999;
+            max-width: 350px;
+        }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #333; }
+        .toast.info { background: #17a2b8; }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==========================================
+           A4 Print Media Query
+           ========================================== */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            .container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .slip-preview {
+                display: block !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 20mm 18mm !important;
+                width: 100% !important;
+                box-sizing: border-box;
+                font-family: 'Georgia', serif;
+                page-break-inside: avoid;
+            }
+
+            .slip-header h1 {
+                font-size: 28pt;
+            }
+
+            .slip-table th {
+                padding: 10px 8px;
+                font-size: 11pt;
+                background: #e8e8e8 !important;
+                color: #1a1a1a !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .slip-table td {
+                padding: 10px 8px;
+                font-size: 11pt;
+            }
+
+            .slip-table tbody tr:nth-child(even) {
+                background: #f9f9f9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .signature-area {
+                margin-top: 30mm;
+            }
+
+            .toast {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="container">
+    <div class="no-print">
+        <h2>Warranty Entry Form</h2>
+        
+        <div class="row">
+            <div class="form-group">
+                <label>Order ID (Editable)</label>
+                <input type="text" id="orderId" list="orderIdList" placeholder="Enter Order ID">
+                <datalist id="orderIdList"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Date (Editable)</label>
+                <input type="text" id="orderDate" placeholder="Enter Date">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" id="custName" list="nameList" placeholder="Enter customer name">
+            <datalist id="nameList"></datalist>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="custPhone" list="phoneList" placeholder="Enter phone number">
+                <datalist id="phoneList"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="custAddress" list="addressList" placeholder="Enter address">
+                <datalist id="addressList"></datalist>
+            </div>
+        </div>
+
+        <div class="product-section">
+            <label style="font-weight: bold; display:block; margin-bottom:10px; color:#333;">Product Details</label>
+            <div id="productContainer"></div>
+            <button class="btn-add" onclick="addProductRow()">+ Add Another Product</button>
+        </div>
+
+        <div class="form-group">
+            <label>Status</label>
+            <select id="statusSelect" class="status-select" onchange="updateStatusColor()">
+                <option value="Incomplete">Incomplete</option>
+                <option value="Complete">Complete</option>
+            </select>
+        </div>
+
+        <div class="btn-group">
+            <button id="saveBtn" class="btn-save" onclick="saveData()">💾 Save</button>
+            <button id="printBtn" class="btn-print" onclick="printOnly()">🖨️ Print</button>
+            <button class="btn-reset" onclick="resetForm()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <!-- প্রিন্ট স্লিপ -->
+    <div class="slip-preview" id="slipPreview">
+        <div class="slip-header">
+            <h1>Silicon Technology</h1>
+            <div class="subtitle">Your Trusted Technology Partner</div>
+            <div class="warranty-slip-tag">Warranty Slip</div>
+        </div>
+
+        <div class="slip-info">
+            <div class="info-block">
+                <div><strong>Order ID:</strong> <span id="printOrderId"></span></div>
+                <div><strong>Date:</strong> <span id="printDate"></span></div>
+            </div>
+            <div class="info-block">
+                <div><strong>Customer:</strong> <span id="printName"></span></div>
+                <div><strong>Phone:</strong> <span id="printPhone"></span></div>
+                <div><strong>Address:</strong> <span id="printAddress"></span></div>
+            </div>
+        </div>
+
+        <table class="slip-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">SL</th>
+                    <th style="width: 50%;">Product / Model</th>
+                    <th style="width: 40%;">S/N (Serial Number)</th>
+                </tr>
+            </thead>
+            <tbody id="printTableBody"></tbody>
+        </table>
+
+        <div id="printStatus" class="print-status-badge"></div>
+
+        <div class="signature-area">
+            <div class="signature-box">Customer Sign</div>
+            <div class="signature-box">Authorize Sign</div>
+        </div>
+
+        <div class="slip-footer">
+            Thank you for choosing Silicon Technology
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzhEXfqUy6Zk2G7ilzYorvmdIuHRk46A7ePKQhmYarf_2iWZLBiXyZD_TozUNgDcQlQIQ/exec";
+
+    let savedOrderIds = new Set();
+    let allSuggestions = [];
+
+    window.addEventListener('load', () => {
+        generateAutoIdAndDate();
+        addProductRow();
+        updateStatusColor();
+        fetchSuggestions();
+    });
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.className = 'toast show' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : type === 'info' ? ' info' : '');
+        setTimeout(() => { toast.className = 'toast'; }, 3000);
+    }
+
+    async function fetchSuggestions() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            allSuggestions = data;
+            
+            const nameList = document.getElementById('nameList');
+            const phoneList = document.getElementById('phoneList');
+            const addressList = document.getElementById('addressList');
+            const orderIdList = document.getElementById('orderIdList');
+            
+            nameList.innerHTML = '';
+            phoneList.innerHTML = '';
+            addressList.innerHTML = '';
+            orderIdList.innerHTML = '';
+
+            const names = [...new Set(data.map(item => item.name).filter(Boolean))];
+            const phones = [...new Set(data.map(item => item.phone).filter(Boolean))];
+            const addresses = [...new Set(data.map(item => item.address).filter(Boolean))];
+            const orderIds = [...new Set(data.map(item => item.orderId).filter(Boolean))];
+
+            names.forEach(n => { const opt = document.createElement('option'); opt.value = n; nameList.appendChild(opt); });
+            phones.forEach(p => { const opt = document.createElement('option'); opt.value = p; phoneList.appendChild(opt); });
+            addresses.forEach(a => { const opt = document.createElement('option'); opt.value = a; addressList.appendChild(opt); });
+            orderIds.forEach(o => { const opt = document.createElement('option'); opt.value = o; orderIdList.appendChild(opt); });
+
+            console.log("✅ Auto suggest loaded:", data.length, "records");
+        } catch (error) {
+            console.log("❌ Auto suggest load failed:", error);
+        }
+    }
+
+    function isDuplicate(orderId) {
+        if (savedOrderIds.has(orderId)) return true;
+        return allSuggestions.some(item => 
+            item.orderId && item.orderId.toString().trim() === orderId
+        );
+    }
+
+    function generateAutoIdAndDate() {
+        const randomId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('orderId').value = randomId;
+        const today = new Date();
+        document.getElementById('orderDate').value = today.toLocaleDateString('en-GB');
+    }
+
+    function addProductRow() {
+        const container = document.getElementById('productContainer');
+        const row = document.createElement('div');
+        row.className = 'product-row';
+        row.innerHTML = `
+            <div class="form-group" style="flex: 2;">
+                <input type="text" class="prod-model" placeholder="Product / Model">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+                <input type="text" class="prod-sn" placeholder="S/N">
+            </div>
+            <button class="btn-remove" onclick="removeProductRow(this)">X</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function removeProductRow(button) {
+        const container = document.getElementById('productContainer');
+        if (container.children.length > 1) {
+            button.parentElement.remove();
+        } else {
+            alert("কমপক্ষে একটি প্রোডাক্ট থাকতে হবে!");
+        }
+    }
+
+    function updateStatusColor() {
+        const select = document.getElementById('statusSelect');
+        if (select.value === 'Incomplete') {
+            select.className = 'status-select incomplete';
+        } else if (select.value === 'Complete') {
+            select.className = 'status-select complete';
+        }
+    }
+
+    function collectFormData() {
+        const orderId = document.getElementById('orderId').value.trim();
+        const date = document.getElementById('orderDate').value.trim();
+        const name = document.getElementById('custName').value.trim();
+        const phone = document.getElementById('custPhone').value.trim();
+        const address = document.getElementById('custAddress').value.trim();
+        const status = document.getElementById('statusSelect').value;
+
+        if (!name || !phone) {
+            showToast("❌ Customer Name এবং Phone পূরণ করুন!", "error");
+            return null;
+        }
+
+        const productRows = document.querySelectorAll('.product-row');
+        const products = [];
+        let productString = "";
+        let snString = "";
+        
+        productRows.forEach(row => {
+            const model = row.querySelector('.prod-model').value.trim();
+            const sn = row.querySelector('.prod-sn').value.trim();
+            if (model || sn) { 
+                products.push({ model: model, sn: sn });
+                productString += (model || "N/A") + ", ";
+                snString += (sn || "N/A") + ", ";
+            }
+        });
+
+        if (products.length === 0) {
+            showToast("❌ কমপক্ষে একটি প্রোডাক্টের তথ্য দিন!", "error");
+            return null;
+        }
+
+        return {
+            orderId: orderId,
+            date: date,
+            customerName: name,
+            phone: phone,
+            address: address,
+            products: productString.slice(0, -2),
+            sn: snString.slice(0, -2),
+            status: status,
+            productsArray: products
+        };
+    }
+
+    function saveToGoogleSheet(data) {
+        savedOrderIds.add(data.orderId);
+
+        const formData = new FormData();
+        formData.append('orderId', data.orderId);
+        formData.append('date', data.date);
+        formData.append('customerName', data.customerName);
+        formData.append('phone', data.phone);
+        formData.append('address', data.address);
+        formData.append('products', data.products);
+        formData.append('sn', data.sn);
+        formData.append('status', data.status);
+
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: formData
+        }).then(() => {
+            console.log("✅ Saved to Sheet:", data.orderId);
+        }).catch(err => {
+            console.log("Fetch error:", err);
+        });
+    }
+
+    function saveData() {
+        const data = collectFormData();
+        if (!data) return;
+
+        if (isDuplicate(data.orderId)) {
+            showToast("⚠️ এই Order ID আগেই সেভ হয়েছে!", "warning");
+            return;
+        }
+
+        saveToGoogleSheet(data);
+        showToast("✅ ডেটা সেভ হয়েছে!");
+        setTimeout(() => fetchSuggestions(), 2000);
+    }
+
+    function printOnly() {
+        const data = collectFormData();
+        if (!data) return;
+
+        document.getElementById('printOrderId').innerText = data.orderId;
+        document.getElementById('printDate').innerText = data.date;
+        document.getElementById('printName').innerText = data.customerName;
+        document.getElementById('printPhone').innerText = data.phone;
+        document.getElementById('printAddress').innerText = data.address;
+
+        const printStatus = document.getElementById('printStatus');
+        printStatus.innerText = data.status;
+        printStatus.className = `print-status-badge ${data.status.toLowerCase()}`;
+
+        const tableBody = document.getElementById('printTableBody');
+        tableBody.innerHTML = ''; 
+        data.productsArray.forEach((prod, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${prod.model || 'N/A'}</td>
+                <td>${prod.sn || 'N/A'}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        document.getElementById('slipPreview').style.display = 'block';
+
+        showToast("🖨️ প্রিন্ট প্রিভিউ খোলা হচ্ছে...", "info");
+
+        setTimeout(() => {
+            window.print();
+        }, 200);
+    }
+
+    function resetForm() {
+        document.getElementById('custName').value = '';
+        document.getElementById('custPhone').value = '';
+        document.getElementById('custAddress').value = '';
+        
+        const container = document.getElementById('productContainer');
+        container.innerHTML = '';
+        addProductRow();
+        
+        document.getElementById('statusSelect').value = 'Incomplete';
+        updateStatusColor();
+
+        generateAutoIdAndDate();
+        document.getElementById('slipPreview').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
